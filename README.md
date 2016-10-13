@@ -9,3 +9,7 @@ Please Google Websocket RFC version 13 for specification
 #Requirements
 
 It requires to modify Bondi compiler source code. Use datum.ml.
+
+#Motivation
+
+Attempt to utilise powerful pattern matching feature of the language to create Websocket protocol.
