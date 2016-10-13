@@ -1,0 +1,64 @@
+let resName = 
+| "ups"		-> "Upgrade"
+| "con"		-> "Connection"
+| "key"		-> "Sec-WebSocket-Accept"
+| _		-> "Not found response name";;
+
+let resValue = 
+| "ups"		-> "websocket"
+| "con"		-> "Upgrade"
+| _		-> "Not found response value";;
+
+let buildRes =
+| name -> | value -> (name) ^ ": " ^ (value);;
+
+
+let getRes key = 
+let name = resName (key) in
+let value = resValue (key) in
+buildRes name value;;
+
+
+let responses = 
+| "successCode" -> "101"
+| "errorCode" 	-> "404"
+| "signKey"	-> "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+| "status"	-> "HTTP/1.1 101 Switching Protocols"
+| "upgrade"	-> getRes "ups"
+| "connection"	-> getRes "con"
+| _		-> "Not found respone";;
+
+
+class Response {
+
+	get_status = { | () -> responses "status" }
+
+	get_upgrade = { | () -> getRes "ups" }
+
+	get_connection = { | () -> getRes "con" }
+
+	get_key = { | () ->
+		let sockKey = getRequest "key" in
+		let combined = sockKey ^ (responses "signKey") in
+		let key =  (encodeKey combined) in
+		println "response sock key ";
+		println sockKey;
+		buildRes (resName "key") key
+		
+	}
+
+	
+	
+	process_response = { | client ->
+		let result = Ref "" in
+		result = !result ^ ((this.get_status()) ^ "\r\n");
+		result = !result ^ ((this.get_upgrade()) ^ "\r\n");
+		result = !result ^ ((this.get_connection()) ^ "\r\n");
+		(*NOTE: It is important to add 2 more new lines at the end, 
+			it is not mentioned in the specification*)
+		result = !result ^ ((this.get_key()) ^ "\r\n\r\n");
+		writeInfo ("Response", !result);
+		write !result client
+	}
+}
+

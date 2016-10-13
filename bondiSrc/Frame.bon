@@ -1,0 +1,74 @@
+(* Framing *)
+
+(* Frames
+ * FIN (1bit)		-> indicates final fragment
+ * RSV (1bit)		-> must be 0 unless extension is negotiated.
+ * Opcode (4bits)	-> if unknown opcode is received, the receiving end point must be _Fail
+  				e.g. 	%x0 -> continue, 
+					%x1 -> text frame, 
+					%x2 -> binary frame, 
+					%x3-7 -> non-control frames
+ * Masked (1 bit)	-> if set to 1, masking key is present otherwise no masking key
+ * masking-key (0-4bit)	-> frames sent from client to server are masked by a 32-bit value. 
+				this is present when masked is set to 1
+ * Payload length (7 bits) -> length of payload data
+ * Payload data (x + y bytes)	-> It is value of extension data concatenated with application data
+ * Extension data (x bytes)	-> 0 bytes unless an extension has been negotiated. 
+ * Application data (y bytes)	-> takes up remainder of the frames after extension data.
+*)
+
+(* In this protocol, it will only focus on text frames and closing frame.
+ * First byte (1000 0001) or 129 in decimal, which is created by bits of
+ *
+ * 1 (FIN, this is the final fragment and no more messages to come) 
+ * 0 (rsv1, no extension is negotiated)
+ * 0 (rsv2, //)
+ * 0 (rsv3, //) 
+ * 0 
+ * 0 
+ * 0 
+ * 1 (opcode, 4 bits in length. text frame is 1 so bits are 0001 and closing is 1000)
+ * Second byte is for data length.
+*)
+
+
+let getBytes text =
+let num = lengthstring text in 
+let bytes = Ref [] in
+
+bytes = append !bytes [129];
+println num;
+if (num <= 125)
+	then bytes = append !bytes [num] 
+	else ();
+(*SHORT*)
+if (num >= 126 && num <= 65535)
+	then 
+		bytes = append !bytes [126];
+		bytes = append !bytes [(num lsr 8)];
+		bytes = append !bytes [num]
+	else ();
+(*LONG*)
+if (num >= 65535)
+	then
+		bytes = append !bytes [127];
+		bytes = append !bytes [(num lsr 56)];
+		bytes = append !bytes [(num lsr 48)];
+		bytes = append !bytes [(num lsr 40)];
+		bytes = append !bytes [(num lsr 32)];
+		bytes = append !bytes [(num lsr 24)];
+		bytes = append !bytes [(num lsr 16)];
+		bytes = append !bytes [(num lsr 8)];
+		bytes = append !bytes [num]
+	else ();
+!bytes;;
+
+%hide types;;
+let sendText text client = 
+let bytes = getBytes text in
+let rec sendBytes = 
+| (x:String)	-> write client x
+| (x:Int)	-> writeint client x
+| Cons x xs	-> sendBytes x; sendBytes xs in
+sendBytes bytes;
+sendBytes text;;

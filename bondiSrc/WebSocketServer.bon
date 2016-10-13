@@ -1,0 +1,45 @@
+let wsVersion 	= 13;;
+
+class WebSocket {
+	client: Socket;
+	hostz: String;
+	port: Int;
+	openEvent: Unit -> Unit;
+	receiveEvent: String -> Unit;
+		
+	set_open = { fun ys -> this.openEvent = ys }
+	set_recv = { fun ys -> this.receiveEvent = ys }
+	
+	start_server = {  | (h:String) -> | (p:Int) ->
+		let server = openserver (gethost h) p in
+		let handshake = new HandShake in
+		let newClient = acceptclient server in
+		
+		(*OPEN EVENT*)
+		!this.openEvent();
+	
+		this.hostz = h;
+		this.port = p;
+		this.client = newClient;
+		
+		handshake.process_handshake !this.client;
+		(*sendText "hello client" (!this.client);*)
+		println (readline !this.client)
+	}
+
+	with toString += | (x:WebSocket) -> "Websocket protocol for version 13\n " 
+			^ " host: "^ (!x.hostz) 
+			^ "  port: " ^ (toString (!x.port)) 
+			^ "\nWebsocket version " ^ (toString wsVersion)
+			^ "\nPlease Google 'Websocket RFC version 13' for protocol specification"
+}
+
+let onopen = | () -> 
+println "opened socket!";;
+
+
+
+let ws = new WebSocket in
+ws.set_open onopen;
+ws.start_server "localhost" 80;
+ws;;

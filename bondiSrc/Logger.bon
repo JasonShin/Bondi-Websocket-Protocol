@@ -1,0 +1,33 @@
+let write2file	= "FILE";;
+let write2cons	= "CONSOLE";;
+let infoLevel 	= "INFO";;
+let warningLevel= "WARNING";;
+let verboseLevel= "VERBOSE";;
+let errorLevel 	= "ERROR";;
+let fileName 	= Ref "";;
+
+let setup =
+| (fn:String) ->
+	fileName = fn;;
+
+let formatLog = 
+fun tag -> fun level -> fun data -> 
+	(getDate) ^ "  " ^  tag ^ "  " ^ level  ^ "  " ^ data;;
+
+let writeInfo = 
+| (tag, data) -> 
+	(writeToFile (formatLog tag infoLevel data) !fileName);;
+
+let writeWarning = 
+| (tag, data) ->
+        (writeToFile (formatLog tag warningLevel data) !fileName);;
+
+
+let writeVerbose =
+| (tag, data) ->
+        (writeToFile (formatLog tag verboseLevel data) !fileName);;
+
+let writeError = 
+| (tag, data) ->
+        (writeToFile (formatLog tag errorLevel data) !fileName);;
+

@@ -1,0 +1,85 @@
+let contains x y =
+if (sysexec2string "echo '" ^x^ "' | grep '" ^ y ^ "'") == "" then False else True;;
+
+let getFirst x del = 
+sysexec2string "echo '" ^ x ^ "' |cut -d " ^ del ^ " -f1";;
+
+let getSecond x del =
+let first = sysexec2string "echo '" ^ x ^ "' |cut -d " ^ del ^ " -f1" in
+sysexec2string "echo '" ^ x ^ "' | sed -e \"s/" ^ first ^ del ^ " //g\"";;
+
+let getHeaderPair x del =
+let first = getFirst x del  in
+let second = getSecond x del in
+Pair first second;;
+
+let (toArray: a -> List a) =
+| x -> Cons x Nil;;
+
+let (appendString: List a -> a -> List a) x =
+| y -> append x (toArray y);;
+
+(* strings received from client adds a weird new line at the end.
+   this code will remove it.
+ *)
+let stripNewline text =
+let curLength = (lengthstring text) in
+substring text 0 (curLength - 1);;
+
+let stripFirst text = 
+let curLength = (lengthstring text) in
+substring text 1 (curLength - 1);;
+
+(* Separates each lines and put them in a list *)
+let separate x = 
+let lineNumber = (string2int (sysexec2string "echo '" ^x^"' | wc -l")) in
+let i = Ref 1 in
+let curLine = Ref "" in
+let result = Ref [] in
+while (!i <= lineNumber) do (
+	curLine = sysexec2string ("echo '" ^x ^ "' | sed -n '" ^ (int2string !i) ^ "{p;q;}'");
+	if !curLine != "" 
+		then result = (appendString !result (stripNewline !curLine));
+		println "printed striped";
+		println (stripNewline !curLine)
+		else ();
+	i = !i + 1
+);
+!result;;
+
+
+
+(* Patterns
+  1. target string, string to append
+  2. target string, string to append, separator
+ *)
+let appendString1 a b = a ^ b;;
+let appendString2 a b c = a ^ b ^ c;; 
+
+
+let encodeKey key =
+sysexec2string "echo -n " ^ key ^ " | openssl sha1 -binary | base64";;
+
+let getDate =
+sysexec2string "date";;
+
+let writeToFile text fileName = 
+sysexec2string "echo '" ^ text ^ "' >> " ^ fileName;;
+
+let appendBytes lst num = 
+append lst [(num land 255)];;
+
+let int2char i = 
+sysexec2string "printf '\\"^i^"\\n'";;
+
+let rec concatArrays =
+| [] -> fun ys -> ys
+| Cons x xs -> fun ys -> Cons x (concatArrays xs ys);;
+
+let rec flatten = 
+| [] -> []
+| Cons x xs -> concatArrays x (flatten xs);;
+
+let rec bytes2string = 
+| [] -> ""
+| Cons x xs -> (int2char (toString x)) ^ (bytes2string xs);;

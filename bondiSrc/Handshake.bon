@@ -1,0 +1,18 @@
+%show types;;
+class HandShake {
+
+	hsdone:Bool;
+	
+	process_handshake = { | client ->
+		let response = new Response in
+		let request = new Request in
+		(*processRequest client; *)
+		request.process_request client;
+		response.process_response client
+		(*Handshake done if no exceptions were caused*)
+		(*this.hsdone = True;*)
+
+	}
+	
+}
+

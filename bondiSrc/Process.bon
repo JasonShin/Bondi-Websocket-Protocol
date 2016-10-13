@@ -1,0 +1,12 @@
+%open "assignment/commonLang.bon";;
+	%open "assignment/Logger.bon";;
+	setup "log.txt";;
+	writeInfo ("Test", "This is a test log");;
+	
+%open "assignment/Request.bon";;
+%open "assignment/Response.bon";;
+%open "assignment/Frame.bon";;
+%open "assignment/Handshake.bon";;
+
+
+%open "assignment/WebSocketServer.bon";;

@@ -1,0 +1,31 @@
+<html>
+	<head>
+		<title>Hello Bondi server</title>
+	</head>
+	<body>
+		This page is for testing websocket connection with bondi server
+	</body>
+</html>
+<script>
+var wsUri = "ws://localhost:80";
+testWebsocket();
+
+function testWebsocket(){
+console.log("before opening");
+var ws = new WebSocket(wsUri);
+ws.onopen = function(evt) {
+
+	console.log("opened");
+	console.log(evt.data);
+}
+ws.onclose = function(evt) { console.log("closed "); console.log(evt)
+ }
+ws.onmessage = function(evt) { 
+	console.log("received data");
+	console.log(evt.data);
+ }
+ws.onerror = function(evt) { console.log("error: "); console.log(evt) }
+
+}
+
+</script>

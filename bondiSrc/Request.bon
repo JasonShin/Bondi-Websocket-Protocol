@@ -1,0 +1,72 @@
+%hide types;;
+(* REQUEST HEADERS *)
+let del         = ":";;
+let methodz     = "GET / HTTP/1.1";;
+let host        = "Host: ";;
+let connection  = "Connection: ";;
+let conValue    = "Upgrade";;
+let version     = "Sec-WebSocket-Version: ";;
+let key         = "Sec-WebSocket-Key: ";;
+let upgrade     = "Upgrade: ";;
+let upgradeValue = "websocket";;
+
+(* This function verifies handshake request headers received from clients
+ * Additionally, collects necessary request information, 
+ * that includes weboskcet key.
+ *)
+
+let ext getRequest = 
+| _ -> "Un";;
+
+let rec verifyRequest =
+| (x:String) ->
+       if contains x methodz
+       		then getRequest += | "method" -> (getSecond x del)
+
+        else if contains x connection
+                then getRequest += | "connection" -> (getSecond x del)
+        else if contains x key
+                then getRequest += | "key" -> (getSecond x del)
+        else if contains x upgradeValue
+		then getRequest += | "upgrade" -> (getSecond x del)
+	else ();;
+
+%show types;;
+class Request {
+	
+	process_request = { | client ->
+		let processing = Ref True in
+		let len = Ref 0 in
+		let curLine = Ref "" in
+		let rec proc client = 
+			(*Assigning value process using path polymorphism*)
+		| 1 ->	1
+		| _ -> 
+			curLine = readline client;
+			len = lengthstring (!curLine);
+			writeInfo ("RequestHandle", !curLine);
+			verifyRequest (stripNewline !curLine) this;
+			proc client (!len)
+		in
+		
+		if (proc client 0) == 1 then
+		
+			if (getRequest "key") == "Un"
+				then Exception "Client did not send a socket key" 
+			else writeInfo ("RequestValid", "socket key checked");
+
+			if (getRequest "method") == "Un"
+				then Exception "Request method in invalid"
+			else writeInfo ("RequestValid", "Method checked");
+
+			if (getRequest "connection") == "Un"
+				then Exception "Unknown connection valud received"
+			else writeInfo ("RequestValid", "connection verified");
+		
+			if (getRequest "upgrade")  == "Un"
+				then Exception "Upgrade unknown"
+			else writeInfo ("RequestValid", "Upgrade value verifies")
+		else Exception "Could not verify client request!"
+	}
+
+}
